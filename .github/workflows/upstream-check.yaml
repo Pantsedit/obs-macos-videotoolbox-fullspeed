@@ -1,0 +1,35 @@
+name: Upstream encoder check
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  check:
+    name: Compare with OBS mac-videotoolbox
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check upstream encoder.c
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          base=$(grep -o 'Upstream file blob | `[0-9a-f]*`' UPSTREAM.md | grep -o '[0-9a-f]\{40\}')
+          curl -fsSL https://raw.githubusercontent.com/obsproject/obs-studio/master/plugins/mac-videotoolbox/encoder.c -o upstream.c
+          current=$(git hash-object upstream.c)
+          echo "base=$base current=$current"
+          if [ "$base" = "$current" ]; then
+            echo "Upstream encoder unchanged."
+            exit 0
+          fi
+          title="Upstream mac-videotoolbox encoder changed"
+          if gh issue list --state open --search "$title in:title" --json number --jq 'length' | grep -qv '^0$'; then
+            echo "Issue already open."
+            exit 0
+          fi
+          gh issue create --title "$title" --body "OBS Studio's \`plugins/mac-videotoolbox/encoder.c\` on master no longer matches the synced base (\`$base\` -> \`$current\`).
+
+          Review the upstream history and port relevant changes to \`src/vt-encoder.c\`, then update \`UPSTREAM.md\`:
+          https://github.com/obsproject/obs-studio/commits/master/plugins/mac-videotoolbox/encoder.c"
