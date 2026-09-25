@@ -1,10 +1,10 @@
 # VideoToolbox Full Speed for OBS Studio (macOS)
 
-I wanted to record in 4K60 and stream at the same time, from one OBS on one Mac (a Mac
+I wanted to record in 4K60 and stream at the same time, from one OBS instance on one Mac (a Mac
 Studio M2 Max). OBS kept showing *Encoding overloaded*, even though the same Mac could
-record lots of 4K ProRes streams at once. So I dug into why.
+record MANY 4K ProRes streams at once. So I dug into why.
 
-It turns out the hardware was never the problem. OBS sets up Apple's HEVC and H.264
+It seems the hardware isn't the issue. OBS sets up Apple's HEVC and H.264
 encoders in two ways that hold them back. Change both, and my M2 Max records 4K60 HEVC
 and streams 4K60 HEVC at the same time, with room left for a 1080p60 output on top.
 This plugin makes those two changes for you.
