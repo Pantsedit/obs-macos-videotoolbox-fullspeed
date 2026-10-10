@@ -8,6 +8,10 @@
 | Synced to commit | `e9f043d4ec47fb7da55086cc15bfd0a4fec53344` (master, 24 Sep 2026) |
 | Upstream file blob | `ca084ac6e568dc442c216f785d11b14b9b4faac4` |
 
+Local changes on top of upstream: real-time encoding and expected frame rate options
+("Optimize for multiple outputs"), separate encoder IDs, encoder timing log, and a fix for
+`DataRateLimits` being created with the wrong CFNumber types (upstream sends 0 bytes / 0 s).
+
 The `upstream-check` workflow compares the current upstream file against this blob
 every week and opens an issue when it changes. To sync: diff the upstream file against
 the blob above, apply the relevant changes to `src/vt-encoder.c`, then update both hashes.

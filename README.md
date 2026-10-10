@@ -39,10 +39,12 @@ spare. OBS sets up its encoder sessions in a way that wastes that:
    takes its time, reaching only ~50 fps at 4K. OBS turned it off in 2022 to work around
    frame drops on early Apple Silicon (obs-studio issue #5840). Those drops did not come
    back in any of our tests on current macOS.
-2. **OBS tells the encoder the frame rate in advance.** With that hint set, two 4K
-   sessions slow each other down to ~36 fps each. Without it, each runs at full speed.
-   Your recording and stream frame rate does not change, because OBS timestamps every
-   frame.
+2. **OBS tells the encoder the frame rate in advance.** When a session is told it needs
+   about 4K60's worth of pixels per second or more, macOS appears to spread it across both
+   encode engines. That barely helps a single output (about 7%), but two such sessions
+   slow each other down to ~36 fps each. Telling the encoder 59 instead of 60 avoids it,
+   and so does not sending the hint at all (the encoder then assumes 30). Your recording
+   and stream frame rate does not change, because OBS timestamps every frame.
 
 **Both** changes are needed. In OBS on an M2 Max, 2x 4K60 HEVC ran at about 42 fps each
 with only one of them, and at a clean 60 fps with both.
@@ -52,7 +54,9 @@ with only one of them, and at a clean 60 fps with both.
 1. Quit OBS.
 2. Run the installer package, **or** copy `obs-macos-videotoolbox-fullspeed.plugin` into
    `~/Library/Application Support/obs-studio/plugins/`.
-3. Start OBS. The new encoders appear in **Settings → Output** (Output Mode: Advanced).
+3. The installer is not signed yet, so macOS blocks it the first time. Open
+   **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
+4. Start OBS. The new encoders appear in **Settings → Output** (Output Mode: Advanced).
 
 Requires OBS Studio 31.1 or newer on macOS 12+ (Apple Silicon recommended; CBR needs macOS 13+).
 
@@ -77,6 +81,17 @@ All the usual encoder settings are there, plus:
 Under the hood the first option turns real-time encoding on and stops sending the
 expected frame rate. For testing, the two can be overridden individually by adding
 `"realtime"` and `"frame_rate_hint"` to the encoder settings JSON in your profile.
+
+### Limit bitrate
+
+Stock OBS's **Limit bitrate** option for the Apple encoders does nothing: a type mismatch
+in OBS's code sends VideoToolbox a limit of 0 bytes per 0 seconds, which it ignores. A
+4K CRF recording with an 80 Mbps limit can run at 200 to 350 Mbps on detailed scenes.
+This plugin sends the limit correctly.
+
+macOS keeps about a third below the limit you set (40 gives ~27 Mbps, 80 gives ~54,
+120 gives ~81), so set roughly **1.5x the bitrate you want**, e.g. 120,000 Kbps for
+about 80 Mbps.
 
 ### Quality
 
